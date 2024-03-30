@@ -48,10 +48,46 @@
 
 #include <xc.h>
 #include <sys/attribs.h>
+#include <stdio.h>
+#include <stdbool.h>
 
 
 #define FPBCLK  (48000000)      // PBCLK frequency is 48MHz
 
+#define UART_RX_BUFFER_SIZE  (128)
+#define UART_RX_BUFFER_MASK (UART_RX_BUFFER_SIZE - 1)
+#if (UART_RX_BUFFER_SIZE & UART_RX_BUFFER_MASK) != 0
+#error UART_RX_BUFFER_SIZE must be a power of two and <= 256
+#endif
+
+#define UART_TX_BUFFER_SIZE  (128)
+#define UART_TX_BUFFER_MASK (UART_TX_BUFFER_SIZE - 1)
+#if (UART_TX_BUFFER_SIZE & UART_TX_BUFFER_MASK) != 0
+#error UART_TX_BUFFER_SIZE must be a power of two and <= 256
+#endif
+
+struct UART_RX_BUFFER
+{
+    volatile uint8_t head;
+    volatile uint8_t tail;
+    uint8_t buf[UART_RX_BUFFER_SIZE];
+};
+
+struct UART_TX_BUFFER
+{
+    volatile uint8_t head;
+    volatile uint8_t tail;
+    uint8_t buf[UART_TX_BUFFER_SIZE];
+};
+
+struct UART_BUFFER
+{
+    struct UART_TX_BUFFER tx;
+    struct UART_RX_BUFFER rx;
+};
+
+// UART buffer
+static struct UART_BUFFER U1Buf;
 
 volatile uint32_t MilliSeconds = 0;
 
@@ -82,6 +118,96 @@ void __ISR(_TIMER_1_VECTOR, ipl7AUTO) Timer1Handler(void)
     LATDINV = _LATD_LATD11_MASK;    // Toggle RD11, P3 pin 21 (500Hz)
     
     IFS0CLR = _IFS0_T1IF_MASK;      // Clear Timer 1 interrupt flag
+}
+
+
+void __ISR(_UART_1_VECTOR, ipl1AUTO) UART1Handler(void)
+{
+    if (IFS1bits.U1TXIF)
+    {
+        if (U1Buf.tx.head != U1Buf.tx.tail) // Is there anything to send?
+        {
+            const uint8_t tmptail = (U1Buf.tx.tail + 1) & UART_TX_BUFFER_MASK;
+            
+            U1Buf.tx.tail = tmptail;
+
+            U1TXREG = U1Buf.tx.buf[tmptail];     // Transmit one byte
+        }
+        else
+        {
+            IEC1CLR = _IEC1_U1TXIE_MASK;         // Nothing left to send; disable Tx interrupt
+        }
+        
+        IFS1CLR = _IFS1_U1TXIF_MASK;  // Clear UART1 Tx interrupt flag
+    }
+    
+    if (IFS1bits.U1RXIF)
+    {
+        const uint8_t tmphead = (U1Buf.rx.head + 1) & UART_RX_BUFFER_MASK;
+        const uint8_t ch = U1RXREG;   // Read received byte from UART
+        
+        if (tmphead == U1Buf.rx.tail)   // Is receive buffer full?
+        {
+             // Buffer is full; discard new byte
+        }
+        else
+        {
+            U1Buf.rx.head = tmphead;
+            U1Buf.rx.buf[tmphead] = ch;   // Store byte in buffer
+        }
+        
+        IFS1CLR = _IFS1_U1RXIF_MASK;  // Clear UART1 Rx interrupt flag
+    }
+    
+    if (IFS1bits.U1EIF)
+    {
+        IFS1CLR = _IFS1_U1EIF_MASK;   // Clear UART1 error interrupt flag
+    }
+}
+
+
+uint8_t UART1RxByte(void)
+{
+    const uint8_t tmptail = (U1Buf.rx.tail + 1) & UART_RX_BUFFER_MASK;
+    
+    while (U1Buf.rx.head == U1Buf.rx.tail)  // Wait, if buffer is empty
+        ;
+    
+    U1Buf.rx.tail = tmptail;
+    
+    return (U1Buf.rx.buf[tmptail]);
+}
+
+
+void UART1TxByte(const uint8_t data)
+{
+    const uint8_t tmphead = (U1Buf.tx.head + 1) & UART_TX_BUFFER_MASK;
+    
+    while (tmphead == U1Buf.tx.tail)   // Wait, if buffer is full
+        ;
+
+    U1Buf.tx.buf[tmphead] = data;
+    U1Buf.tx.head = tmphead;
+
+    IEC1SET = _IEC1_U1TXIE_MASK;       // Enable UART1 Tx interrupt
+}
+
+
+bool UART1RxAvailable(void)
+{
+    return (U1Buf.rx.head != U1Buf.rx.tail);
+}
+
+
+void _mon_putc(const char ch)
+{
+    // See: https://microchipdeveloper.com/faq:81
+    if (ch == '\n')
+    {
+        UART1TxByte('\r');
+    }
+    
+    UART1TxByte(ch); // Connect stdout to UART1
 }
 
 
@@ -122,21 +248,60 @@ void initMillisecondTimer(void)
 }
 
 
+/* initUARTs --- set up UART(s) and buffers, and connect to 'stdout' */
+
+void initUARTs(void)
+{
+    const int baud = 9600;
+    
+    U1Buf.tx.head = 0;
+    U1Buf.tx.tail = 0;
+    U1Buf.rx.head = 0;
+    U1Buf.rx.tail = 0;
+
+    /* Configure PPS */
+    RPG0Rbits.RPG0R = 3;          // U1Tx on pin 90, RPG0, P3 pin 40
+    U1RXRbits.U1RXR = 12;         // U1Rx on pin 89, RPG1, P3 pin 39 (5V tolerant)
+    
+    U1MODEbits.UEN = 3;           // Use just Rx/Tx; no handshaking
+    
+    U1BRG = (FPBCLK / (baud * 16)) - 1;
+    
+    IPC7bits.U1IP = 1;            // UART1 interrupt priority 1 (lowest)
+    IPC7bits.U1IS = 0;            // UART1 interrupt sub-priority 0
+    
+    IFS1CLR = _IFS1_U1TXIF_MASK;  // Clear UART1 Tx interrupt flag
+    IFS1CLR = _IFS1_U1RXIF_MASK;  // Clear UART1 Rx interrupt flag
+    IFS1CLR = _IFS1_U1EIF_MASK;   // Clear UART1 error interrupt flag
+    
+    IEC1SET = _IEC1_U1RXIE_MASK;  // Enable UART1 Rx interrupt
+    IEC1SET = _IEC1_U1EIE_MASK;   // Enable UART1 error interrupt
+    
+    U1MODESET = _U1MODE_ON_MASK;  // Enable UART1
+    U1STASET = _U1STA_UTXEN_MASK | _U1STA_URXEN_MASK; // Enable Rx and Tx
+}
+
+
 int main(void)
 {
     initMCU();
     initGPIOs();
+    initUARTs();
     initMillisecondTimer();
     
     __builtin_enable_interrupts();     // Global interrupt enable
     
+    printf("\nHello from the PIC%dMX%dF%dL\n", 32, 250, 256);
+    
     while (1)
     {
         LATBbits.LATB9 = 1;
+        UART1TxByte('U');
         
         delayms(500);
          
         LATBbits.LATB9 = 0;
+        UART1TxByte('1');
         
         delayms(500);
     }
