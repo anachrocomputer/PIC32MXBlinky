@@ -53,6 +53,38 @@
 #define FPBCLK  (48000000)      // PBCLK frequency is 48MHz
 
 
+volatile uint32_t MilliSeconds = 0;
+
+
+/* delayms --- busy-wait delay for given number of milliseconds */
+
+static void delayms(const uint32_t interval)
+{
+    const uint32_t now = MilliSeconds;
+    
+    while ((MilliSeconds - now) < interval)
+        ;
+}
+
+
+/* millis --- Arduino-like function to return milliseconds since start-up */
+
+static uint32_t millis(void)
+{
+    return (MilliSeconds);
+}
+
+
+void __ISR(_TIMER_1_VECTOR, ipl7AUTO) Timer1Handler(void)
+{
+    MilliSeconds++;
+    
+    LATDINV = _LATD_LATD11_MASK;    // Toggle RD11, P3 pin 21 (500Hz)
+    
+    IFS0CLR = _IFS0_T1IF_MASK;      // Clear Timer 1 interrupt flag
+}
+
+
 /* initMCU --- set up the microcontroller in general */
 
 void initMCU(void)
@@ -67,27 +99,46 @@ void initMCU(void)
 static void initGPIOs(void)
 {
     TRISBbits.TRISB9 = 0;   // LED on RB9
+    TRISDbits.TRISD11 = 0;  // SQWAVE on RD11
+}
+
+
+/* initMillisecondTimer --- set up a timer to interrupt every millisecond */
+
+void initMillisecondTimer(void)
+{
+    /* Configure Timer 1 for 1kHz/1ms interrupts */
+    T1CONbits.TCKPS = 0;        // Timer 1 prescale: 1
+    
+    TMR1 = 0x00;                // Clear Timer 1 counter
+    PR1 = (FPBCLK / 1000) - 1;  // Interrupt every millisecond (1kHz)
+    
+    IPC1bits.T1IP = 7;          // Timer 1 interrupt priority 7 (highest)
+    IPC1bits.T1IS = 1;          // Timer 1 interrupt sub-priority 1
+    IFS0CLR = _IFS0_T1IF_MASK;  // Clear Timer 1 interrupt flag
+    IEC0SET = _IEC0_T1IE_MASK;  // Enable Timer 1 interrupt
+    
+    T1CONSET = _T1CON_ON_MASK;  // Enable Timer 1
 }
 
 
 int main(void)
 {
-    volatile int dally;
-    
     initMCU();
     initGPIOs();
+    initMillisecondTimer();
+    
+    __builtin_enable_interrupts();     // Global interrupt enable
     
     while (1)
     {
         LATBbits.LATB9 = 1;
         
-        for (dally = 0; dally < 500000; dally++)
-            ;
+        delayms(500);
          
         LATBbits.LATB9 = 0;
         
-        for (dally = 0; dally < 500000; dally++)
-            ;
+        delayms(500);
     }
     
     return (EXIT_SUCCESS);
