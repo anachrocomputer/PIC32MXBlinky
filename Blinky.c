@@ -211,6 +211,28 @@ void _mon_putc(const char ch)
 }
 
 
+/* printDeviceID --- print the Device ID bytes as read from DEVID */
+
+void printDeviceID(void)
+{
+    printf("Device ID = %08x\n", DEVIDbits.DEVID);
+    printf("Version = %02x\n", DEVIDbits.VER);
+   
+    switch (DEVIDbits.DEVID)
+    {
+    case 0x06a13053:
+        puts("PIC32MX250F256L");    // The usual
+        break;
+    case 0x06a35053:
+        puts("PIC32MX570F512L");    // More RAM
+        break;
+    case 0x04307053:
+        puts("PIC32MX795F512L");    // Faster
+        break;
+    }
+}
+
+
 /* initMCU --- set up the microcontroller in general */
 
 void initMCU(void)
@@ -292,6 +314,8 @@ int main(void)
     __builtin_enable_interrupts();     // Global interrupt enable
     
     printf("\nHello from the PIC%dMX%dF%dL\n", 32, 250, 256);
+    
+    printDeviceID();
     
     while (1)
     {
