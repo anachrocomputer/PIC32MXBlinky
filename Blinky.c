@@ -31,7 +31,7 @@
 #pragma config OSCIOFNC = OFF           // CLKO Output Signal Active on the OSCO Pin (Disabled)
 #pragma config FPBDIV = DIV_1           // Peripheral Clock Divisor (Pb_Clk is Sys_Clk/1)
 #pragma config FCKSM = CSDCMD           // Clock Switching and Monitor Selection (Clock Switch Disable, FSCM Disabled)
-#pragma config WDTPS = PS1048576        // Watchdog Timer Postscaler (1:1048576)
+#pragma config WDTPS = PS8192           // Watchdog Timer Postscaler (1:8192)
 #pragma config WINDIS = OFF             // Watchdog Timer Window Enable (Watchdog Timer is in Non-Window Mode)
 #pragma config FWDTEN = OFF             // Watchdog Timer Enable (WDT Disabled (SWDTEN Bit Controls))
 #pragma config FWDTWINSZ = WINSZ_25     // Watchdog Timer Window Size (Window Size is 25%)
@@ -89,6 +89,7 @@ struct UART_BUFFER
 // UART buffer
 static struct UART_BUFFER U1Buf;
 
+uint32_t SavedRCON;
 volatile uint32_t MilliSeconds = 0;
 volatile bool Tick = false;
 
@@ -235,12 +236,116 @@ void printDeviceID(void)
 }
 
 
+/* printResetReason --- print the cause of the chip's reset */
+
+void printResetReason(void)
+{
+    printf("RCON = 0x%08x\n", SavedRCON);
+    
+    if (SavedRCON & _RCON_POR_MASK)
+    {
+       fputs("POR ", stdout);
+    }
+    
+    if (SavedRCON & _RCON_BOR_MASK)
+    {
+        fputs("BOR ", stdout);
+    }
+    
+    if (SavedRCON & _RCON_WDTO_MASK)
+    {
+        fputs("WDTO ", stdout);
+    }
+    
+    if (SavedRCON & _RCON_SWR_MASK)
+    {
+        fputs("SWR ", stdout);
+    }
+    
+    if (SavedRCON & _RCON_EXTR_MASK)
+    {
+        fputs("EXTR ", stdout);
+    }
+    
+    if (SavedRCON & _RCON_CMR_MASK)
+    {
+        fputs("CMR ", stdout);
+    }
+    
+    if (SavedRCON & _RCON_HVDR_MASK)
+    {
+        fputs("HVDR ", stdout);
+    }
+    
+    fputs("\n", stdout);
+}
+
+
+/* softwareReset --- reset the microcontroller */
+
+void softwareReset(void)
+{
+    puts("Software RESET...");
+    
+    // Delay about 40ms so that the message can get out
+    uint32_t end = millis() + 40u;
+    
+    while (millis() < end)
+        ;
+    
+    SYSKEY = 0x0;        // Ensure system is locked
+    SYSKEY = 0xAA996655; // Write Key1 to SYSKEY
+    SYSKEY = 0x556699AA; // Write Key2 to SYSKEY
+
+    RSWRSTSET = _RSWRST_SWRST_MASK;
+    volatile int __attribute__((unused)) junk = RSWRST;
+    
+    for (;;)
+        ;
+}
+
+
+/* testWatchdog --- enter an infinite loop to test the watchdog */
+
+void testWatchdog(void)
+{
+    int second;
+    
+    printf("Watchdog test...\n");
+    
+    for (second = 0; ; second++) {
+        printf("%d ", second);
+        fflush(stdout);
+        
+        uint32_t end = millis() + 1000u;
+        
+        while (millis() < end)
+            ;
+   }
+}
+
+
+/* nudgeWatchdog --- reset the watchdog counter */
+
+void nudgeWatchdog(void)
+{
+    WDTCONSET = _WDTCON_WDTCLR_MASK;
+}
+
+
 /* initMCU --- set up the microcontroller in general */
 
 void initMCU(void)
 {
     /* Configure interrupts */
     INTCONSET = _INTCON_MVEC_MASK; // Multi-vector mode
+    
+    /* Enable watchdog timer */
+    WDTCONSET = _WDTCON_ON_MASK;
+    
+    /* Remember why this reset occurred*/
+    SavedRCON = RCON;
+    RCONCLR = 0xffffffff;
 }
 
 
@@ -319,6 +424,7 @@ int main(void)
     
     printf("\nHello from the PIC%dMX%dF%dL\n", 32, 250, 256);
     
+    printResetReason();
     printDeviceID();
     
     end = millis() + 500UL;
@@ -335,7 +441,7 @@ int main(void)
                 printf("millis() = %ld\n", millis());
             }
          
-            // Nudge watchdog here
+            nudgeWatchdog();
             
             Tick = false;
         }
@@ -348,8 +454,19 @@ int main(void)
             switch (ch) {
             case 'i':
             case 'I':
-               printDeviceID();
-               break;
+                printDeviceID();
+                break;
+            case 'r':
+            case 'R':
+                printResetReason();
+                break;
+            case '~':
+                softwareReset();
+                break;
+            case 'w':
+            case 'W':
+                testWatchdog();
+                break;
             }
         }
     }
