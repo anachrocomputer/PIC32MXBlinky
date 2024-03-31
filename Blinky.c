@@ -226,6 +226,9 @@ void printDeviceID(void)
     case 0x06a13053:
         puts("PIC32MX250F256L");    // The usual
         break;
+    case 0x06a15053:
+        puts("PIC32MX550F256L");    // The other one
+        break;
     case 0x06a35053:
         puts("PIC32MX570F512L");    // More RAM
         break;
