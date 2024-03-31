@@ -90,6 +90,7 @@ struct UART_BUFFER
 static struct UART_BUFFER U1Buf;
 
 volatile uint32_t MilliSeconds = 0;
+volatile bool Tick = false;
 
 
 /* delayms --- busy-wait delay for given number of milliseconds */
@@ -114,6 +115,7 @@ static uint32_t millis(void)
 void __ISR(_TIMER_1_VECTOR, ipl7AUTO) Timer1Handler(void)
 {
     MilliSeconds++;
+    Tick = true;
     
     LATDINV = _LATD_LATD11_MASK;    // Toggle RD11, P3 pin 21 (500Hz)
     
@@ -306,6 +308,8 @@ void initUARTs(void)
 
 int main(void)
 {
+    uint32_t end;
+    
     initMCU();
     initGPIOs();
     initUARTs();
@@ -317,17 +321,37 @@ int main(void)
     
     printDeviceID();
     
+    end = millis() + 500UL;
+    
     while (1)
     {
-        LATBbits.LATB9 = 1;
-        UART1TxByte('U');
-        
-        delayms(500);
+        if (Tick)
+        {
+            if (millis() >= end)
+            {
+                end = millis() + 500UL;
+                LATBINV = _LATB_LATB9_MASK; // Toggle LED on RB9
+
+                printf("millis() = %ld\n", millis());
+            }
          
-        LATBbits.LATB9 = 0;
-        UART1TxByte('1');
+            // Nudge watchdog here
+            
+            Tick = false;
+        }
         
-        delayms(500);
+        if (UART1RxAvailable())
+        {
+            const uint8_t ch = UART1RxByte();
+         
+            printf("UART1: %02x\n", ch);
+            switch (ch) {
+            case 'i':
+            case 'I':
+               printDeviceID();
+               break;
+            }
+        }
     }
     
     return (EXIT_SUCCESS);
