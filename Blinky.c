@@ -1,9 +1,4 @@
-/* 
- * File:   Blinky.c
- * Author: john
- *
- * Created on 29 March 2024, 21:11
- */
+/* Blinky --- blink LED on RB9 of PIC32MX board             2024-03-29 */
 
 // PIC32MX250F256L Configuration Bit Settings
 
@@ -92,17 +87,6 @@ static struct UART_BUFFER U1Buf;
 uint32_t SavedRCON;
 volatile uint32_t MilliSeconds = 0;
 volatile bool Tick = false;
-
-
-/* delayms --- busy-wait delay for given number of milliseconds */
-
-static void delayms(const uint32_t interval)
-{
-    const uint32_t now = MilliSeconds;
-    
-    while ((MilliSeconds - now) < interval)
-        ;
-}
 
 
 /* millis --- Arduino-like function to return milliseconds since start-up */
