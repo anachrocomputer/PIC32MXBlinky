@@ -479,6 +479,10 @@ int main(void)
             case 'W':
                 testWatchdog();
                 break;
+            case 'x':
+            case 'X':
+                printf("__XC32_PART_SUPPORT_VERSION = %d\n", __XC32_PART_SUPPORT_VERSION);
+                break;
             }
         }
     }
