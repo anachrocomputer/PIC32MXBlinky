@@ -340,6 +340,16 @@ void initMCU(void)
 
 static void initGPIOs(void)
 {
+    /* No analog pins in use */
+    ANSELA = 0;
+    ANSELB = 0;
+    ANSELC = 0;
+    ANSELD = 0;
+    ANSELE = 0;
+    ANSELF = 0;
+    ANSELG = 0;
+    
+    /* GPIO pins used as outputs */
     TRISBbits.TRISB9 = 0;   // LED on RB9
     TRISDbits.TRISD11 = 0;  // SQWAVE on RD11
 }
