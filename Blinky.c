@@ -411,6 +411,7 @@ void initUARTs(void)
 int main(void)
 {
     uint32_t end;
+    bool buttonState = true;
     
     initMCU();
     initGPIOs();
@@ -437,7 +438,21 @@ int main(void)
 
                 printf("millis() = %ld\n", millis());
             }
-         
+            
+            if (PORTAbits.RA1 != buttonState)
+            {
+                if (PORTAbits.RA1)
+                {
+                    puts("RELEASE");
+                }
+                else
+                {
+                    puts("PRESS");
+                }
+                
+                buttonState = PORTAbits.RA1;
+            }
+            
             nudgeWatchdog();
             
             Tick = false;
