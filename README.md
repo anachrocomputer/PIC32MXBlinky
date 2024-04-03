@@ -13,15 +13,21 @@ Later, we'll have:
 
 ## Connections ##
 
-| Name   | Port | Pin | Activity           |
-|:-------|:-----|:----|:-------------------|
-| LED    | RB9  | 33  | LED, active-LOW    |
-| SQWAVE | RD11 | 71  | 500Hz              |
-| U1TX   | RG0  | 90  | UART1 transmit     |
-| U1RX   | RG1  | 89  | UART1 receive      |
-| BUTTON | RA1  | 38  | Button, active-LOW |
+| Name   | Port | Pin | PIC32MX795F512L pin | Activity           |
+|:-------|:-----|:----|:--------------------|:-------------------|
+| LED    | RB9  | 33  | 33                  | LED, active-LOW    |
+| SQWAVE | RD11 | 71  | 71                  | 500Hz              |
+| U1TX   | RG0  | 90  | 53 (RF8)            | UART1 transmit     |
+| U1RX   | RG1  | 89  | 52 (RF2)            | UART1 receive      |
+| BUTTON | RA1  | 38  | 38                  | Button, active-LOW |
 
 PIC32 pin numbers are for the 100-pin package.
+
+Note that the PIC32MX795F512L does not have PPS and therefore has all the
+peripheral pins pre-assigned.
+It is not possible to assign U1TX to RF8 via PPS on the chips which do have it.
+Which means that we have the plain GPIOs assigned the same,
+but the UART assigned differently between the two classes of chip.
 
 LED lights when the pin is pulled LOW.
 
