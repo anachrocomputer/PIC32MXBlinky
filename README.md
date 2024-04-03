@@ -25,6 +25,14 @@ PIC32 pin numbers are for the 100-pin package.
 
 LED lights when the pin is pulled LOW.
 
+## Configurations ##
+
+| Name    | PIC32           | RAM  | Clock | Notes                                                |
+|:--------|:----------------|:-----|:------|:-----------------------------------------------------|
+| default | PIC32MX250F256L |  32k | 48MHz | The usual PIC32 on the Reach Robotics Leg Test Board |
+| MoreRAM | PIC32MX570F512L |  64k | 48MHz | Modified board with 64k RAM                          |
+| Faster  | PIC32MX795F512L | 128k | 80MHz | Modified board with 80MHz and 128k RAM               |
+
 ## PIC32 Toolchain ##
 
 MPLAB X V3.45 and 'xc32' V2.15.

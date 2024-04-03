@@ -1,13 +1,20 @@
 /* Blinky --- blink LED on RB9 of PIC32MX board             2024-03-29 */
 
-// PIC32MX250F256L Configuration Bit Settings
+// PIC32MX250F256L, PIC32MX570F512L, or PIC32MX795F512L Configuration Bit Settings
 
 // 'C' source line config statements
 
 // DEVCFG3
 // USERID = No Setting
+#if __PIC32_FEATURE_SET__ == 795
+#pragma config FSRSSEL = PRIORITY_7     // SRS Select (SRS Priority 7)
+#pragma config FMIIEN = OFF             // Ethernet RMII/MII Enable (RMII Enabled)
+#pragma config FETHIO = OFF             // Ethernet I/O Pin Select (Alternate Ethernet I/O)
+#pragma config FCANIO = OFF             // CAN I/O Pin Select (Alternate CAN I/O)
+#else
 #pragma config PMDL1WAY = OFF           // Peripheral Module Disable Configuration (Allow multiple reconfigurations)
 #pragma config IOL1WAY = OFF            // Peripheral Pin Select Configuration (Allow multiple reconfigurations)
+#endif
 #pragma config FUSBIDIO = OFF           // USB USID Selection (Controlled by Port Function)
 #pragma config FVBUSONIO = OFF          // USB VBUS ON Selection (Controlled by Port Function)
 
@@ -27,12 +34,20 @@
 #pragma config FPBDIV = DIV_1           // Peripheral Clock Divisor (Pb_Clk is Sys_Clk/1)
 #pragma config FCKSM = CSDCMD           // Clock Switching and Monitor Selection (Clock Switch Disable, FSCM Disabled)
 #pragma config WDTPS = PS8192           // Watchdog Timer Postscaler (1:8192)
+#if __PIC32_FEATURE_SET__ != 795
 #pragma config WINDIS = OFF             // Watchdog Timer Window Enable (Watchdog Timer is in Non-Window Mode)
+#endif
 #pragma config FWDTEN = OFF             // Watchdog Timer Enable (WDT Disabled (SWDTEN Bit Controls))
+#if __PIC32_FEATURE_SET__ != 795
 #pragma config FWDTWINSZ = WINSZ_25     // Watchdog Timer Window Size (Window Size is 25%)
+#endif
 
 // DEVCFG0
+#if __PIC32_FEATURE_SET__ == 795
+#pragma config DEBUG = OFF              // Background Debugger Enable (Debugger is disabled)
+#else
 #pragma config JTAGEN = OFF             // JTAG Enable (JTAG Disabled)
+#endif
 #pragma config ICESEL = ICS_PGx2        // ICE/ICD Comm Channel Select (Communicate on PGEC2/PGED2)
 #pragma config PWP = OFF                // Program Flash Write Protect (Disable)
 #pragma config BWP = OFF                // Boot Flash Write Protect bit (Protection Disabled)
@@ -110,7 +125,11 @@ void __ISR(_TIMER_1_VECTOR, ipl7AUTO) Timer1Handler(void)
 
 void __ISR(_UART_1_VECTOR, ipl1AUTO) UART1Handler(void)
 {
+#if __PIC32_FEATURE_SET__ == 795
+    if (IFS0bits.U1TXIF)
+#else
     if (IFS1bits.U1TXIF)
+#endif
     {
         if (U1Buf.tx.head != U1Buf.tx.tail) // Is there anything to send?
         {
@@ -122,13 +141,25 @@ void __ISR(_UART_1_VECTOR, ipl1AUTO) UART1Handler(void)
         }
         else
         {
+#if __PIC32_FEATURE_SET__ == 795
+            IEC0CLR = _IEC0_U1TXIE_MASK;         // Nothing left to send; disable Tx interrupt
+#else
             IEC1CLR = _IEC1_U1TXIE_MASK;         // Nothing left to send; disable Tx interrupt
+#endif
         }
         
+#if __PIC32_FEATURE_SET__ == 795
+        IFS0CLR = _IFS0_U1TXIF_MASK;  // Clear UART1 Tx interrupt flag
+#else
         IFS1CLR = _IFS1_U1TXIF_MASK;  // Clear UART1 Tx interrupt flag
+#endif
     }
     
+#if __PIC32_FEATURE_SET__ == 795
+    if (IFS0bits.U1RXIF)
+#else
     if (IFS1bits.U1RXIF)
+#endif
     {
         const uint8_t tmphead = (U1Buf.rx.head + 1) & UART_RX_BUFFER_MASK;
         const uint8_t ch = U1RXREG;   // Read received byte from UART
@@ -143,12 +174,24 @@ void __ISR(_UART_1_VECTOR, ipl1AUTO) UART1Handler(void)
             U1Buf.rx.buf[tmphead] = ch;   // Store byte in buffer
         }
         
+#if __PIC32_FEATURE_SET__ == 795
+        IFS0CLR = _IFS0_U1RXIF_MASK;  // Clear UART1 Rx interrupt flag
+#else
         IFS1CLR = _IFS1_U1RXIF_MASK;  // Clear UART1 Rx interrupt flag
+#endif
     }
     
+#if __PIC32_FEATURE_SET__ == 795
+    if (IFS0bits.U1EIF)
+#else
     if (IFS1bits.U1EIF)
+#endif
     {
+#if __PIC32_FEATURE_SET__ == 795
+        IFS0CLR = _IFS0_U1EIF_MASK;   // Clear UART1 error interrupt flag
+#else
         IFS1CLR = _IFS1_U1EIF_MASK;   // Clear UART1 error interrupt flag
+#endif
     }
 }
 
@@ -176,7 +219,11 @@ void UART1TxByte(const uint8_t data)
     U1Buf.tx.buf[tmphead] = data;
     U1Buf.tx.head = tmphead;
 
+#if __PIC32_FEATURE_SET__ == 795
+    IEC0SET = _IEC0_U1TXIE_MASK;       // Enable UART1 Tx interrupt
+#else
     IEC1SET = _IEC1_U1TXIE_MASK;       // Enable UART1 Tx interrupt
+#endif
 }
 
 
@@ -204,6 +251,7 @@ void printDeviceID(void)
 {
     printf("Device ID = %08x\n", DEVIDbits.DEVID);
     printf("Version = %02x\n", DEVIDbits.VER);
+    printf("__PIC32_FEATURE_SET__ = %d\n", __PIC32_FEATURE_SET__);
    
     switch (DEVIDbits.DEVID)
     {
@@ -259,10 +307,12 @@ void printResetReason(void)
         fputs("CMR ", stdout);
     }
     
+#ifdef _RCON_HVDR_MASK
     if (SavedRCON & _RCON_HVDR_MASK)
     {
         fputs("HVDR ", stdout);
     }
+#endif
     
     fputs("\n", stdout);
 }
@@ -330,7 +380,7 @@ void initMCU(void)
     /* Enable watchdog timer */
     WDTCONSET = _WDTCON_ON_MASK;
     
-    /* Remember why this reset occurred*/
+    /* Remember why this reset occurred */
     SavedRCON = RCON;
     RCONCLR = 0xffffffff;
 }
@@ -341,6 +391,7 @@ void initMCU(void)
 static void initGPIOs(void)
 {
     /* No analog pins in use */
+#ifdef ANSELA
     ANSELA = 0;
     ANSELB = 0;
     ANSELC = 0;
@@ -348,6 +399,9 @@ static void initGPIOs(void)
     ANSELE = 0;
     ANSELF = 0;
     ANSELG = 0;
+#else
+    AD1PCFG = 0xFFFF;
+#endif
     
     /* GPIO pins used as outputs */
     TRISBbits.TRISB9 = 0;   // LED on RB9
@@ -385,14 +439,31 @@ void initUARTs(void)
     U1Buf.rx.head = 0;
     U1Buf.rx.tail = 0;
 
-    /* Configure PPS */
+    /* Configure PPS if we have it */
+#ifdef RPG0R
     RPG0Rbits.RPG0R = 3;          // U1Tx on pin 90, RPG0, P3 pin 40
     U1RXRbits.U1RXR = 12;         // U1Rx on pin 89, RPG1, P3 pin 39 (5V tolerant)
+#else
+    // No PPS:
+    // U1Tx on RF8, pin 53
+    // U1Rx on RF2, pin 52
+#endif
     
     U1MODEbits.UEN = 3;           // Use just Rx/Tx; no handshaking
     
     U1BRG = (FPBCLK / (baud * 16)) - 1;
     
+#if __PIC32_FEATURE_SET__ == 795
+    IPC6bits.U1IP = 1;            // UART1 interrupt priority 1 (lowest)
+    IPC6bits.U1IS = 0;            // UART1 interrupt sub-priority 0
+    
+    IFS0CLR = _IFS0_U1TXIF_MASK;  // Clear UART1 Tx interrupt flag
+    IFS0CLR = _IFS0_U1RXIF_MASK;  // Clear UART1 Rx interrupt flag
+    IFS0CLR = _IFS0_U1EIF_MASK;   // Clear UART1 error interrupt flag
+    
+    IEC0SET = _IEC0_U1RXIE_MASK;  // Enable UART1 Rx interrupt
+    IEC0SET = _IEC0_U1EIE_MASK;   // Enable UART1 error interrupt
+#else
     IPC7bits.U1IP = 1;            // UART1 interrupt priority 1 (lowest)
     IPC7bits.U1IS = 0;            // UART1 interrupt sub-priority 0
     
@@ -402,6 +473,7 @@ void initUARTs(void)
     
     IEC1SET = _IEC1_U1RXIE_MASK;  // Enable UART1 Rx interrupt
     IEC1SET = _IEC1_U1EIE_MASK;   // Enable UART1 error interrupt
+#endif
     
     U1MODESET = _U1MODE_ON_MASK;  // Enable UART1
     U1STASET = _U1STA_UTXEN_MASK | _U1STA_URXEN_MASK; // Enable Rx and Tx
