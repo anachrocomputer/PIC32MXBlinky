@@ -33,17 +33,17 @@ LED lights when the pin is pulled LOW.
 
 ## Configurations ##
 
-| Name    | PIC32           | RAM  | Clock | Notes                                                |
-|:--------|:----------------|:-----|:------|:-----------------------------------------------------|
-| default | PIC32MX250F256L |  32k | 48MHz | The usual PIC32 on the Reach Robotics Leg Test Board |
-| MoreRAM | PIC32MX570F512L |  64k | 48MHz | Modified board with 64k RAM                          |
-| Faster  | PIC32MX795F512L | 128k | 80MHz | Modified board with 80MHz and 128k RAM               |
+| Name    | PIC32           | RAM  | Flash    | Clock | Notes                                                |
+|:--------|:----------------|:-----|:---------|:------|:-----------------------------------------------------|
+| default | PIC32MX250F256L |  32k | 256k+3k  | 48MHz | The usual PIC32 on the Reach Robotics Leg Test Board |
+| MoreRAM | PIC32MX570F512L |  64k | 512k+3k  | 48MHz | Modified board with 64k RAM                          |
+| Faster  | PIC32MX795F512L | 128k | 512k+12k | 80MHz | Modified board with 80MHz and 128k RAM               |
 
 The PLL setup for the PIC32MX795F512L is different from the other two so that
 we get an 80MHz SYSCLK.
 This makes the PIC32MX795F512L about 4.5 times faster than the other PIC32s,
 once we have switched on the cache and the prefetch buffer in 'initMCU()'.
-But we must divide that by two to get a 40MHz PBCLK which is within the limits of the chip.
+But we must divide SYSCLK by two to get a 40MHz PBCLK which is within the limits of the chip.
 A #define in the code (FPBCLK) is used to calculate timer settings and baud rates.
 
 ## PIC32 Toolchain ##
