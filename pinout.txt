@@ -1,0 +1,184 @@
+PIC32MX250F256L                                                               PIC32MX250F256L
+PIC32MX570F512L                              P2                               PIC32MX570F512L
+1                               AN28 RG15  1 * * 2  V+ 6V
+3                     AN22/RPE5/PMD5 RE5   3 * * 4  RE6  AN23/PMD6                         4
+5                          AN27/PMD7 RE7   5 * * 6  RC1  AN29/RPC1                         6
+7                          AN30/RPC2 RC2   7 * * 8  RC3  AN31/RPC3                         8
+9                         RPC4/CTED7 RC4   9 * * 10 RG6  AN16/C1IND/RPG6/SCK2/PMA5         10
+11              AN17/C1INC/RPG7/PMA4 RG7  11 * * 12 RG8  AN18/C2IND/RPG8/PMA3              12
+13                                   MCLR 13 * * 14 RG9  AN19/C2INC/RPG9/PMA2              14
+                                    GND_P 15 * * 16 V+ 6V
+17                         TMS/CTED1 RA0  17 * * 18 RE8  AN32/RPE8                         18
+19                         AN33/RPE9 RE9  19 * * 20 RB5  AN5/C1INA/RPB5/VBUSON             20
+21                         AN4/C1INB RB4  21 * * 22 RB3  PGED3/AN3/C2INA/RPB3              22
+23 PGEC3/AN2/CTCMP/C2INB/RPB2/CTED13 RB2  23 * * 24 RB1  PGEC1/AN1/RPB1/CTED12             24
+25                    PGED1/AN0/RPB0 RB0  25 * * 26 RB6  PGEC2/AN6/RPB6                    26
+27              PGED2/AN7/RPB7/CTED3 RB7  27 * * 28 RA9  VREF-/PMA7                        28
+29                        VREF+/PMA6 RA10 29 * * 30 V+ 6V
+                                    GND_P 31 * * 32 RB8  AN8/RPB8/CTED10                   32
+33 LED                AN9/RPB9/CTED4 RB9  33 * * 34 RB10 CVREFOUT/AN10/RPB10/CTED11/PMA13  34
+35                       AN11/PMA12  RB11 35 * * 36 GND_P
+                                    V+ 6V 37 * * 38 RA1  TCK/CTED2                  BUTTON 38
+39                   AN34/RPF13/SCK3 RF13 39 * * 40 RF12 AN35/RPF12                        40
+41                        AN12/PMA11 RB12 41 * * 42 RB13 AN13/PMA10                        42
+43             AN14/RPB14/CTED5/PMA1 RB14 43 * * 44 RB15 AN15/RPB15/OCFB/CTED6/PMA0        44
+                                    GND_P 45 * * 46 V+ 6V
+47                        AN36/RPD14 RD14 47 * * 48 RD15 AN37/RPD15/SCK4                   48
+49                         RPF4/PMA9 RF4  49 * * 50 RF5  RPF5/PMA8                         50
+       
+PIC32MX250F256L                                                               PIC32MX250F256L
+PIC32MX570F512L                              P3                               PIC32MX570F512L
+51                        USBID/RPF3 RF3   1 * * 2  RF2  AN38/RPF2                         52
+53                         AN39/RPF8 RF8   3 * * 4  USB 5V
+                                     3V3   5 * * 6  D-                                     56
+57                                    D+   7 * * 8  RA2  SCL2                              58
+59                              SDA2 RA3   9 * * 10 RA4  TDI/CTED9                         60
+61                               TDO RA5  11 * * 12 3V3
+                                      n/c 13 * * 14 n/c
+                                    GND_S 15 * * 16 RA14 RPA14/SCL1                        66
+67                        RPA15/SDA1 RA15 17 * * 18 RD8  RPD8/RTCC                         68
+69                              RPD9 RD9  19 * * 20 RD10 RPD10/SCK1/PMA15                  70
+71                       RPD11/PMA14 RD11 21 * * 22 RD0  RPD0/INT0                         72
+73                       SOSCI/RPC13 RC13 23 * * 24 RC14 SOSCO/RPC14/T1CK                  74
+                                    GND_S 25 * * 26 RD1  AN24/RPD1                         76
+77                         AN25/RPD2 RD2  27 * * 28 RD3  AN26/C3IND/RPD3                   78
+79                  AN40/RPD12/PMD12 RD12 29 * * 30 RD13 AN41/PMD13                        80
+81                         RPD4/PMWR RD4  31 * * 32 RD5  RPD5/PMRD                         82
+83                  AN42/C3INC/PMD14 RD6  33 * * 34 RD7  AN43/C3INB/PMD15                  84
+                                     n/c  35 * * 36 3V3
+87             AN44/C3INA/RPF0/PMD11 RF0  37 * * 38 RF1  AN45/RPF1/PMD10                   88
+89                         RPG1/PMD9 RG1  39 * * 40 RG0  RPG0/PMD8                         90
+91                                   RA6  41 * * 42 RA7  CTED8                             92
+93                         AN46/PMD0 RE0  43 * * 44 RE1  AN47/PMD1                         94
+95                                   RG14 45 * * 46 RG12                                   96
+97                                   RG13 47 * * 48 RE2  AN20/PMD2                         98
+99                   RPE3/CTPLS/PMD3 RE3  49 * * 50 RE4  AN21/PMD4                        100
+                                          
+                                          
+Device    GPIO Function                  PIC32 pin
+LED       RB9  AN9/RPB9/CTED4             33
+BUTTON    RA1  TCK/CTED2                  38
+
+
+GPIO  P2/P3 Name     PIC32 PIC32MX250F256L/PIC32MX570F512L Function
+RA0   P2-17           17   TMS/CTED1
+RA1   P2-38 BUTTON    38   TCK/CTED2
+RA2   P3-8            58   SCL2
+RA3   P3-9            59   SDA2
+RA4   P3-10           60   TDI/CTED9
+RA5   P3-11           61   TDO
+RA6   P3-41           91   RA6
+RA7   P3-42           92   CTED8
+RA8   --              --   --
+RA9   P2-28           28   VREF-/PMA7
+RA10  P2-29           29   VREF+/PMA6
+RA11  --              --   --
+RA12  --              --   --
+RA13  --              --   --
+RA14  P3-16           66   RPA14/SCL1
+RA15  P3-17           67   RPA15/SDA1
+
+RB0   P2-25           25   PGED1/AN0/RPB0
+RB1   P2-24           24   PGEC1/AN1/RPB1/CTED12
+RB2   P2-23           23   PGEC3/AN2/CTCMP/C2INB/RPB2/CTED13
+RB3   P2-22           22   PGED3/AN3/C2INA/RPB3
+RB4   P2-21           21   AN4/C1INB
+RB5   P2-20           20   AN5/C1INA/RPB5/VBUSON
+RB6   P2-26           26   PGEC2/AN6/RPB6
+RB7   P2-27           27   PGED2/AN7/RPB7/CTED3
+RB8   P2-32           32   AN8/RPB8/CTED10
+RB9   P2-33 LED       33   AN9/RPB9/CTED4
+RB10  P2-34           34   CVREFOUT/AN10/RPB10/CTED11/PMA13
+RB11  P2-35           35   AN11/PMA12
+RB12  P2-41           41   AN12/PMA11
+RB13  P2-42           42   AN13/PMA10
+RB14  P2-43           43   AN14/RPB14/CTED5/PMA1
+RB15  P2-44           44   AN15/RPB15/OCFB/CTED6/PMA0
+
+RC0   --              --   --
+RC1   P2-6             6   AN29/RPC1
+RC2   P2-7             7   AN30/RPC2
+RC3   P2-8             8   AN31/RPC3
+RC4   P2-9             9   RPC4/CTED7
+RC5   --              --   --
+RC6   --              --   --
+RC7   --              --   --
+RC8   --              --   --
+RC9   --              --   --
+RC10  --              --   --
+RC11  --              --   --
+RC12  --    XTAL      63   OSC1/CLKI/RC12
+RC13  P3-23           73   SOSCI/RPC13
+RC14  P3-24           74   SOSCO/RPC14/T1CK
+RC15  --    XTAL      64   OSC2/CLKO
+
+RD0   P3-22           72   RPD0/INT0
+RD1   P3-26           76   AN24/RPD1
+RD2   P3-27           77   AN25/RPD2
+RD3   P3-28           78   AN26/C3IND/RPD3
+RD4   P3-31           81   RPD4/PMWR
+RD5   P3-32           82   RPD5/PMRD
+RD6   P3-33           83   AN42/C3INC/PMD14
+RD7   P3-34           84   AN43/C3INB/PMD15
+RD8   P3-18           68   RPD8/RTCC
+RD9   P3-19           69   RPD9
+RD10  P3-20           70   RPD10/SCK1/PMA15
+RD11  P3-21           71   RPD11/PMA14
+RD12  P3-29           79   AN40/RPD12/PMD12
+RD13  P3-30           80   AN41/PMD13
+RD14  P2-47           47   AN36/RPD14
+RD15  P2-48           48   AN37/RPD15/SCK4
+
+RE0   P3-43           93   AN46/PMD0
+RE1   P3-44           94   AN47/PMD1
+RE2   P3-48           98   AN20/PMD2
+RE3   P3-49           99   RPE3/CTPLS/PMD3
+RE4   P3-50          100   AN21/PMD4
+RE5   P2-3             3   AN22/RPE5/PMD5
+RE6   P2-4             4   AN23/PMD6
+RE7   P2-5             5   AN27/PMD7
+RE8   P2-18           18   AN32/RPE8
+RE9   P2-19           19   AN33/RPE9
+RE10  --              --  --
+RE11  --              --  --
+RE12  --              --  --
+RE13  --              --  --
+RE14  --              --  --
+RE15  --              --  --
+
+RF0   P3-37           87  AN44/C3INA/RPF0/PMD11
+RF1   P3-38           88  AN45/RPF1/PMD10
+RF2   P3-2            52  AN38/RPF2
+RF3   P3-1            51  USBID/RPF3
+RF4   P2-49           49  RPF4/PMA9
+RF5   P2-50           50  RPF5/PMA8
+RF6   --              --  --
+RF7   --              --  --
+RF8   P3-3            53  AN39/RPF8
+RF9   --              --  --
+RF10  --              --  --
+RF11  --              --  --
+RF12  P2-40           40  AN35/RPF12
+RF13  P2-39           39  AN34/RPF13/SCK3
+RF14  --              --  --
+RF15  --              --  --
+
+RG0   P3-40           90  RPG0/PMD8
+RG1   P3-39           89  RPG1/PMD9
+RG2   --              --  --
+RG3   --              --  --
+RG4   --              --  --
+RG5   --              --  --
+RG6   P2-10           10  AN16/C1IND/RPG6/SCK2/PMA5
+RG7   P2-11           11  AN17/C1INC/RPG7/PMA4
+RG8   P2-12           12  AN18/C2IND/RPG8/PMA3
+RG9   P2-14           14  AN19/C2INC/RPG9/PMA2
+RG10  --              --  --
+RG11  --              --  --
+RG12  P3-46           96  RG12
+RG13  P3-47           97  RG13
+RG14  P3-45           95  RG14
+RG15  P2-1             1  RG15
+
+
+
