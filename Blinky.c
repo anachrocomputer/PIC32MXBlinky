@@ -20,10 +20,18 @@
 
 // DEVCFG2
 #pragma config FPLLIDIV = DIV_4         // PLL Input Divider (4x Divider)
+#if __PIC32_FEATURE_SET__ == 795
+#pragma config FPLLMUL = MUL_20         // PLL Multiplier (20x Multiplier)
+#else
 #pragma config FPLLMUL = MUL_24         // PLL Multiplier (24x Multiplier)
+#endif
 #pragma config UPLLIDIV = DIV_4         // USB PLL Input Divider (4x Divider)
 #pragma config UPLLEN = OFF             // USB PLL Enable (Disabled)
+#if __PIC32_FEATURE_SET__ == 795
+#pragma config FPLLODIV = DIV_1         // System PLL Output Clock Divider (PLL Divide by 1)
+#else
 #pragma config FPLLODIV = DIV_2         // System PLL Output Clock Divider (PLL Divide by 2)
+#endif
 
 // DEVCFG1
 #pragma config FNOSC = PRIPLL           // Oscillator Selection Bits (Primary Osc w/PLL (XT+,HS+,EC+PLL))
@@ -31,7 +39,11 @@
 #pragma config IESO = OFF               // Internal/External Switch Over (Disabled)
 #pragma config POSCMOD = HS             // Primary Oscillator Configuration (HS osc mode)
 #pragma config OSCIOFNC = OFF           // CLKO Output Signal Active on the OSCO Pin (Disabled)
+#if __PIC32_FEATURE_SET__ == 795
+#pragma config FPBDIV = DIV_2           // Peripheral Clock Divisor (Pb_Clk is Sys_Clk/2)
+#else
 #pragma config FPBDIV = DIV_1           // Peripheral Clock Divisor (Pb_Clk is Sys_Clk/1)
+#endif
 #pragma config FCKSM = CSDCMD           // Clock Switching and Monitor Selection (Clock Switch Disable, FSCM Disabled)
 #pragma config WDTPS = PS8192           // Watchdog Timer Postscaler (1:8192)
 #if __PIC32_FEATURE_SET__ != 795
@@ -62,7 +74,11 @@
 #include <stdbool.h>
 
 
+#if __PIC32_FEATURE_SET__ == 795
+#define FPBCLK  (40000000)      // PBCLK frequency is 40MHz
+#else
 #define FPBCLK  (48000000)      // PBCLK frequency is 48MHz
+#endif
 
 #define UART_RX_BUFFER_SIZE  (128)
 #define UART_RX_BUFFER_MASK (UART_RX_BUFFER_SIZE - 1)
@@ -374,6 +390,17 @@ void nudgeWatchdog(void)
 
 void initMCU(void)
 {
+#if __PIC32_FEATURE_SET__ == 795
+    // Data Memory SRAM wait states: Default Setting = 1; set it to 0
+    BMXCONbits.BMXWSDRM = 0;
+    
+    // Flash PM Wait States: MX Flash runs at 2 wait states @ 80 MHz
+    CHECONbits.PFMWS = 2;
+    
+    // Prefetch-cache: Enable prefetch for cacheable PFM instructions
+    CHECONbits.PREFEN = 1;
+#endif
+    
     /* Configure interrupts */
     INTCONSET = _INTCON_MVEC_MASK; // Multi-vector mode
     
