@@ -177,24 +177,27 @@ void __ISR(_UART_1_VECTOR, ipl1AUTO) UART1Handler(void)
     if (IFS1bits.U1RXIF)
 #endif
     {
-        const uint8_t tmphead = (U1Buf.rx.head + 1) & UART_RX_BUFFER_MASK;
-        const uint8_t ch = U1RXREG;   // Read received byte from UART
-        
-        if (tmphead == U1Buf.rx.tail)   // Is receive buffer full?
+        while (U1STAbits.URXDA)     // Loop to empty the Rx FIFO
         {
-             // Buffer is full; discard new byte
-        }
-        else
-        {
-            U1Buf.rx.head = tmphead;
-            U1Buf.rx.buf[tmphead] = ch;   // Store byte in buffer
-        }
-        
+            const uint8_t tmphead = (U1Buf.rx.head + 1) & UART_RX_BUFFER_MASK;
+            const uint8_t ch = U1RXREG;   // Read received byte from UART
+
+            if (tmphead == U1Buf.rx.tail)   // Is receive buffer full?
+            {
+                 // Buffer is full; discard new byte
+            }
+            else
+            {
+                U1Buf.rx.head = tmphead;
+                U1Buf.rx.buf[tmphead] = ch;   // Store byte in buffer
+            }
+
 #if __PIC32_FEATURE_SET__ == 795
-        IFS0CLR = _IFS0_U1RXIF_MASK;  // Clear UART1 Rx interrupt flag
+            IFS0CLR = _IFS0_U1RXIF_MASK;  // Clear UART1 Rx interrupt flag
 #else
-        IFS1CLR = _IFS1_U1RXIF_MASK;  // Clear UART1 Rx interrupt flag
+            IFS1CLR = _IFS1_U1RXIF_MASK;  // Clear UART1 Rx interrupt flag
 #endif
+        }
     }
     
 #if __PIC32_FEATURE_SET__ == 795
@@ -203,6 +206,8 @@ void __ISR(_UART_1_VECTOR, ipl1AUTO) UART1Handler(void)
     if (IFS1bits.U1EIF)
 #endif
     {
+        U1STACLR = _U1STA_FERR_MASK | _U1STA_OERR_MASK | _U1STA_PERR_MASK;
+        
 #if __PIC32_FEATURE_SET__ == 795
         IFS0CLR = _IFS0_U1EIF_MASK;   // Clear UART1 error interrupt flag
 #else
@@ -470,10 +475,12 @@ void initUARTs(void)
 #ifdef RPG0R
     RPG0Rbits.RPG0R = 3;          // U1Tx on pin 90, RPG0, P3 pin 40
     U1RXRbits.U1RXR = 12;         // U1Rx on pin 89, RPG1, P3 pin 39 (5V tolerant)
+    CNPUGbits.CNPUG1 = 1;         // Enable pull-up on U1Rx in case it's floating
 #else
     // No PPS:
     // U1Tx on RF8, pin 53
     // U1Rx on RF2, pin 52
+    // No Change Notify on RF2, so cannot be given a pull-up
 #endif
     
     U1MODEbits.UEN = 3;           // Use just Rx/Tx; no handshaking
