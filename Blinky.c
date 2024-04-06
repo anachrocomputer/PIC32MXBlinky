@@ -351,6 +351,8 @@ void softwareReset(void)
     while (millis() < end)
         ;
     
+    __builtin_disable_interrupts();    // Global interrupt disable
+    
     SYSKEY = 0x0;        // Ensure system is locked
     SYSKEY = 0xAA996655; // Write Key1 to SYSKEY
     SYSKEY = 0x556699AA; // Write Key2 to SYSKEY
