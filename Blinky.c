@@ -272,7 +272,6 @@ void printDeviceID(void)
 {
     printf("Device ID = %08x\n", DEVIDbits.DEVID);
     printf("Version = %02x\n", DEVIDbits.VER);
-    printf("__PIC32_FEATURE_SET__ = %d\n", __PIC32_FEATURE_SET__);
    
     switch (DEVIDbits.DEVID)
     {
@@ -289,6 +288,15 @@ void printDeviceID(void)
         puts("PIC32MX795F512L");    // Faster
         break;
     }
+}
+
+
+/* printCompilerInfo --- print some useful information that xc32 gives us */
+
+void printCompilerInfo(void)
+{
+    printf("__PIC32_FEATURE_SET__ = %d\n", __PIC32_FEATURE_SET__);
+    printf("__XC32_PART_SUPPORT_VERSION = %d\n", __XC32_PART_SUPPORT_VERSION);
 }
 
 
@@ -589,7 +597,7 @@ int main(void)
                 break;
             case 'x':
             case 'X':
-                printf("__XC32_PART_SUPPORT_VERSION = %d\n", __XC32_PART_SUPPORT_VERSION);
+                printCompilerInfo();
                 break;
             }
         }
