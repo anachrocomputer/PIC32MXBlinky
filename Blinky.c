@@ -266,6 +266,70 @@ void _mon_putc(const char ch)
 }
 
 
+/* analogWrite --- Arduino-like function to set a PWM channel */
+
+void analogWrite(const int channel, const int pwm)
+{
+    switch (channel)
+    {
+    case 0:
+        OC1RS = pwm;
+        break;
+    case 1:
+        OC2RS = pwm;
+        break;
+    case 2:
+        OC3RS = pwm;
+        break;
+    case 3:
+        OC4RS = pwm;
+        break;
+    case 4:
+        OC5RS = pwm;
+        break;
+    }
+}
+
+
+/* setRGBLed --- control an RGB LED connected to PWM */
+
+void setRGBLed(const int state, const uint16_t fade)
+{
+   switch (state) {
+   case 0:                    // Red fading up, blue on
+      OC1RS = fade;
+      OC2RS = 0;
+      OC3RS = 1023;
+      break;
+   case 1:                    // Red on, blue fading down
+      OC1RS = 1023;
+      OC2RS = 0;
+      OC3RS = 1023 - fade;
+      break;
+   case 2:                    // Red on, green fading up
+      OC1RS = 1023;
+      OC2RS = fade;
+      OC3RS = 0;
+      break;
+   case 3:                    // Red fading down, green on
+      OC1RS = 1023 - fade;
+      OC2RS = 1023;
+      OC3RS = 0;
+      break;
+   case 4:                    // Green on, blue fading up
+      OC1RS = 0;
+      OC2RS = 1023;
+      OC3RS = fade;
+      break;
+   case 5:                    // Green fading down, blue on
+      OC1RS = 0;
+      OC2RS = 1023 - fade;
+      OC3RS = 1023;
+      break;
+   }
+}
+
+
 /* printDeviceID --- print the Device ID bytes as read from DEVID */
 
 void printDeviceID(void)
@@ -470,6 +534,50 @@ void initMillisecondTimer(void)
 }
 
 
+/* initPWM --- set up a timer for PWM generation */
+
+void initPWM(void)
+{
+    // Configure Timer 3 for 10-bit PWM at 183Hz (152Hz on 795)
+    T3CONbits.TCKPS = 7;        // Timer 3 prescale: 256
+    
+    TMR3 = 0x00;                // Clear Timer 3 counter
+    PR3 = 1023;                 // PWM range 0..1023 (10 bits)
+    
+    T3CONSET = _T3CON_ON_MASK;  // Enable Timer 3
+    
+    /* Configure PPS OC pins for PWM */
+#ifdef RPD0R
+    RPD0Rbits.RPD0R = 12; // OC1 on pin 72 RD0
+    RPD1Rbits.RPD1R = 11; // OC2 on pin 76 RD1
+    RPD2Rbits.RPD2R = 11; // OC3 on pin 77 RD2
+    //RPD3Rbits.RPD3R = 11; // OC4 on pin 78 RD3
+    //RPD4Rbits.RPD4R = 11; // OC5 on pin 81 RD4
+#endif
+    
+    OC1CONbits.OCTSEL = 1;       // Source: Timer 3
+    OC1CONbits.OCM = 6;          // PWM mode
+    
+    OC1RS = 0;
+    
+    OC1CONSET = _OC1CON_ON_MASK; // Enable OC1 PWM
+    
+    OC2CONbits.OCTSEL = 1;       // Source: Timer 3
+    OC2CONbits.OCM = 6;          // PWM mode
+    
+    OC2RS = 0;
+    
+    OC2CONSET = _OC2CON_ON_MASK; // Enable OC2 PWM
+    
+    OC3CONbits.OCTSEL = 1;       // Source: Timer 3
+    OC3CONbits.OCM = 6;          // PWM mode
+    
+    OC3RS = 0;
+    
+    OC3CONSET = _OC3CON_ON_MASK; // Enable OC3 PWM
+}
+
+
 /* initUARTs --- set up UART(s) and buffers, and connect to 'stdout' */
 
 void initUARTs(void)
@@ -526,12 +634,15 @@ void initUARTs(void)
 
 int main(void)
 {
+    int ledState = 0;
+    uint16_t fade = 0;
     uint32_t end;
     bool buttonState = true;
     
     initMCU();
     initGPIOs();
     initUARTs();
+    initPWM();
     initMillisecondTimer();
     
     __builtin_enable_interrupts();     // Global interrupt enable
@@ -547,6 +658,20 @@ int main(void)
     {
         if (Tick)
         {
+            if (fade == 1023)
+            {
+                fade = 0;
+
+                if (ledState == 5)
+                    ledState = 0;
+                else
+                    ledState++;
+            }
+            else
+                fade++;
+            
+            setRGBLed(ledState, fade);
+         
             if (millis() >= end)
             {
                 end = millis() + 500UL;
