@@ -1,3 +1,6 @@
+![Static Badge](https://img.shields.io/badge/MCU-PIC32MX-green "MCU:PIC32MX")
+![Static Badge](https://img.shields.io/badge/BOARD-Reach_Leg_Test_PCB-green "BOARD:Reach Leg Test PCB")
+
 # PIC32MXBlinky #
 
 Blink a LED on a PIC32MX250F256L dev board.
@@ -53,8 +56,8 @@ A #define in the code (FPBCLK) is used to calculate timer settings and baud rate
 
 ## PIC32 Toolchain ##
 
-MPLAB X V5.20 and 'xc32' V2.15.
-These are quite old versions now, so I really ought to upgrade!
+MPLAB X V6.05 and 'xc32' V4.30.
+These are not quite the latest versions.
 
 ## PIC32 Programmer ##
 

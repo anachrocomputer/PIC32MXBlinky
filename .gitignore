@@ -3,3 +3,5 @@ PIC32MXBlinky.X/dist
 PIC32MXBlinky.X/nbproject/Makefile-*
 PIC32MXBlinky.X/nbproject/Package-*
 PIC32MXBlinky.X/nbproject/private
+PIC32MXBlinky.X/.generated_files
+
